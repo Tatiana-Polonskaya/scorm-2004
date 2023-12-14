@@ -59,6 +59,7 @@ maxScore.innerText = String(maximum);
 // ------------------------------------------------- RESULT -------------------------------------------------
 const quizResult = document.getElementById("quiz-result");
 const allDoneAlert = document.getElementById("all-done");
+const competeBtn = document.getElementById("complete-button");
 
 const passingScore = document.getElementById("passing-score");
 passingScore.innerText = String(minimum);
@@ -69,20 +70,6 @@ const setUserScore = () => {
   scorm.set("cmi.score.scaled", (result / maximum) * 100);
   scorm.set("cmi.score.raw", result);
   scorm.save();
-};
-
-const setComplete = () => {
-  let completion = scorm.set("cmi.completion_status", "completed");
-  let success;
-
-  result >= minimum
-    ? (success = scorm.set("cmi.success_status", "passed"))
-    : (success = scorm.set("cmi.success_status", "failed"));
-
-  console.log(completion);
-  completion
-    ? scorm.quit()
-    : console.log("Ошибка: Курс не может быть отмечен как пройденный!");
 };
 
 // ------------------------------------------------- CONTENT GENERATION -------------------------------------------------
@@ -125,7 +112,7 @@ for (let i = 0; i < steps.length; i++) {
                                       .join("")}
                                 </div>
                                 <div class="col-auto">
-                                   <p id="btn-submit-question-${i}" class="btn submit btn-primary my-3" onclick="handleSubmitButton(${i})">Завершить</p>
+                                   <button id="btn-submit-question-${i}" class="btn submit btn-primary my-3" onclick="handleSubmitButton(${i})">Завершить</button>
                                 </div>
                            </form> 
                            <div class="alert " id="result-answer-${i}"></div>
@@ -147,10 +134,9 @@ for (let i = 0; i < steps.length; i++) {
 // ------------------------------------------------- NEXT BUTTON -------------------------------------------------
 function nextButtomClick() {
   if (currentSlider + 1 < steps.length) {
-    console.log("currentSlider", currentSlider);
-    console.log("isScored", steps[currentSlider].isScored);
+    currentSlider += 1;
+
     if (!steps[currentSlider].isScored) {
-      currentSlider += 1;
       result += steps[currentSlider].score;
       steps[currentSlider].isScored = true;
 
@@ -160,7 +146,24 @@ function nextButtomClick() {
 }
 
 // ------------------------------------------------- SUBMIT BUTTON -------------------------------------------------
+
+const setComplete = () => {
+  let completion = scorm.set("cmi.completion_status", "completed");
+  let success;
+
+  result >= minimum
+    ? (success = scorm.set("cmi.success_status", "passed"))
+    : (success = scorm.set("cmi.success_status", "failed"));
+
+  completion
+    ? scorm.quit()
+    : console.error("Ошибка: Курс не может быть отмечен как пройденный!");
+};
+
 function handleSubmitButton(index) {
+  const submitBtn = document.getElementById(`btn-submit-question-${index}`);
+  submitBtn.setAttribute("disabled", "true");
+
   const userAnswer = document.querySelector(
     `input[name="question-${CSS.escape(String(index))}"]:checked`
   ).value;
@@ -177,11 +180,11 @@ function handleSubmitButton(index) {
     resultClass = "alert-danger";
     resultMessage = "Ответ неверный.";
   }
+
   setUserScore();
 
   resultElement.classList.add(resultClass);
   resultElement.innerHTML = resultMessage;
-  resultElement.setAttribute("disabled", "false");
 
   const inputs = document.querySelectorAll(
     `input[name="question-${CSS.escape(String(index))}"]`

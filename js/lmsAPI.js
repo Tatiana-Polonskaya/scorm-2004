@@ -4,7 +4,7 @@ const scorm = pipwerks.SCORM;
 let lmsConnected;
 
 function handleError(msg) {
-  alert(msg);
+  console.error(msg);
 }
 
 function initCourse() {
